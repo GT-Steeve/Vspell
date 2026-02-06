@@ -66,7 +66,6 @@ const player = {
         y: 30,
         width: 300,
         height: 20,
-
         frameWidth: 300,
         frameHeight: 50,
         fallbackPadding: 2
@@ -94,12 +93,48 @@ const enemy = {
         y: 30,
         width: 300,
         height: 20,
-
         frameWidth: 300,
         frameHeight: 50,
         fallbackPadding: 2
     }
 };
+
+// ================================
+// DÉGÂTS FLOTTANTS
+// ================================
+const damageTexts = [];
+
+function addDamageText(value, hudX, hudY, color = "#ff0000") {
+    damageTexts.push({
+        value,
+        x: hudX,
+        y: hudY + 25, // 25px sous la barre de vie
+        alpha: 1,
+        lifetime: 0.8, // durée affichage en secondes
+        color
+    });
+}
+
+function drawDamageTexts(deltaTime) {
+    for (let i = damageTexts.length - 1; i >= 0; i--) {
+        const dmg = damageTexts[i];
+        dmg.lifetime -= deltaTime;
+        if (dmg.lifetime <= 0) {
+            damageTexts.splice(i, 1);
+            continue;
+        }
+
+        dmg.y += 40 * deltaTime; // vitesse de descente
+        dmg.alpha = dmg.lifetime / 0.8;
+
+        ctx.globalAlpha = dmg.alpha;
+        ctx.fillStyle = dmg.color;
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(dmg.value, dmg.x, dmg.y);
+        ctx.globalAlpha = 1;
+    }
+}
 
 // ================================
 // DRAW FUNCTIONS
@@ -114,9 +149,6 @@ function drawEntity(entity) {
     ctx.fillRect(entity.x, entity.y, entity.size, entity.size);
 }
 
-// ================================
-// Barre de vie (player normal, enemy inverse)
-// ================================
 function drawHealthHUD(entity, invert = false) {
     const { x, y, width, height, frameWidth, frameHeight, fallbackPadding } = entity.hudHpBar;
     const hpRatio = Math.max(0, entity.hp / entity.maxHp);
@@ -137,10 +169,8 @@ function drawHealthHUD(entity, invert = false) {
     // barre actuelle
     ctx.fillStyle = "#2ecc71";
     if (!invert) {
-        // normale (gauche → droite)
         ctx.fillRect(x, y, width * hpRatio, height);
     } else {
-        // inversée (droite → gauche)
         ctx.fillRect(x + width * (1 - hpRatio), y, width * hpRatio, height);
     }
 }
@@ -149,20 +179,32 @@ function drawHealthHUD(entity, invert = false) {
 // COMBAT
 // ================================
 function handleCombat(deltaTime) {
-    // player attaque ennemi
+    // --- Player attaque Ennemi ---
     player.lastAttack += deltaTime;
     if (player.lastAttack >= player.attackSpeed) {
         enemy.hp -= player.attack;
         enemy.hp = Math.max(0, enemy.hp);
         player.lastAttack = 0;
+
+        const hud = enemy.hudHpBar;
+        const hpRatio = enemy.hp / enemy.maxHp;
+        // X = début du vert restant inversé (barre ennemie va de droite à gauche)
+        const x = hud.x + hud.width * (1 - hpRatio);
+        addDamageText(player.attack, x, hud.y, "#ff0000");
     }
 
-    // ennemi attaque player
+    // --- Ennemi attaque Player ---
     enemy.lastAttack += deltaTime;
     if (enemy.lastAttack >= enemy.attackSpeed) {
         player.hp -= enemy.attack;
         player.hp = Math.max(0, player.hp);
         enemy.lastAttack = 0;
+
+        const hud = player.hudHpBar;
+        const hpRatio = player.hp / player.maxHp;
+        // X = fin du vert restant
+        const x = hud.x + hud.width * hpRatio;
+        addDamageText(enemy.attack, x, hud.y, "#ffcc00");
     }
 }
 
@@ -178,15 +220,17 @@ function gameLoop(timestamp) {
 
     drawBackground();
 
-    // player
+    // Player
     drawEntity(player);
     drawHealthHUD(player);
 
-    // ennemi (invert = true)
+    // Ennemi
     drawEntity(enemy);
     drawHealthHUD(enemy, true);
 
     handleCombat(deltaTime);
+
+    drawDamageTexts(deltaTime);
 
     requestAnimationFrame(gameLoop);
 }
