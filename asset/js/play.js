@@ -41,7 +41,7 @@ backgroundImage.src = "asset/img/background_fight/arene.jpg";
 const hudHpFrame = new Image();
 hudHpFrame.src = "asset/img/ui/titre_Vspel.png";
 
-// optionnel : info console si image absente
+// info console si image absente
 hudHpFrame.onerror = () => {
     console.warn("Image HUD HP introuvable → fallback activé");
 };
@@ -66,8 +66,31 @@ const player = {
 
         frameWidth: 300,
         frameHeight: 50,
-        
-        fallbackPadding: 2 
+        fallbackPadding: 2
+    }
+};
+
+// ================================
+// ENNEMI
+// ================================
+const enemy = {
+    x: GAME_WIDTH - 140, // position à droite (ajustable)
+    y: 300,
+    size: 40,
+    color: "#f1c40f", // jaune
+
+    maxHp: 100,
+    hp: 100,
+
+    hudHpBar: {
+        x: GAME_WIDTH - 60 - 300, // barre en haut à droite
+        y: 30,
+        width: 300,
+        height: 20,
+
+        frameWidth: 300,
+        frameHeight: 50,
+        fallbackPadding: 2
     }
 };
 
@@ -86,35 +109,24 @@ function drawBackground() {
     );
 }
 
-function drawPlayer() {
-    ctx.fillStyle = player.color;
+function drawEntity(entity) {
+    ctx.fillStyle = entity.color;
     ctx.fillRect(
-        player.x,
-        player.y,
-        player.size,
-        player.size
+        entity.x,
+        entity.y,
+        entity.size,
+        entity.size
     );
 }
 
-function drawPlayerHealthHUD(player) {
-    const {
-        x,
-        y,
-        width,
-        height,
-        frameWidth,
-        frameHeight
-    } = player.hudHpBar;
+function drawHealthHUD(entity) {
+    const { x, y, width, height, frameWidth, frameHeight, fallbackPadding } = entity.hudHpBar;
 
-    const hpRatio = Math.max(0, player.hp / player.maxHp);
+    const hpRatio = Math.max(0, entity.hp / entity.maxHp);
 
-    const hasHudImage =
-        hudHpFrame.complete &&
-        hudHpFrame.naturalWidth !== 0;
+    const hasHudImage = hudHpFrame.complete && hudHpFrame.naturalWidth !== 0;
 
-    // ============================
-    // IMAGE HUD (si dispo)
-    // ============================
+    // IMAGE HUD si dispo
     if (hasHudImage) {
         ctx.drawImage(
             hudHpFrame,
@@ -124,18 +136,16 @@ function drawPlayerHealthHUD(player) {
             frameHeight
         );
     } else {
-        // fallback simple avec padding configurable
-        const pad = player.hudHpBar.fallbackPadding;
+        // fallback simple
         ctx.fillStyle = "#000";
-        ctx.fillRect(x - pad, y - pad, width + pad * 2, height + pad * 2);
+        ctx.fillRect(x - fallbackPadding, y - fallbackPadding, width + fallbackPadding * 2, height + fallbackPadding * 2);
     }
 
-    // ============================
-    // BARRE DE VIE (TOUJOURS)
-    // ============================
+    // barre vide
     ctx.fillStyle = "#400";
     ctx.fillRect(x, y, width, height);
 
+    // vie actuelle
     ctx.fillStyle = "#2ecc71";
     ctx.fillRect(x, y, width * hpRatio, height);
 }
@@ -147,8 +157,14 @@ function gameLoop() {
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     drawBackground();
-    drawPlayer();
-    drawPlayerHealthHUD(player);
+
+    // player
+    drawEntity(player);
+    drawHealthHUD(player);
+
+    // ennemi
+    drawEntity(enemy);
+    drawHealthHUD(enemy);
 
     requestAnimationFrame(gameLoop);
 }
