@@ -15,7 +15,7 @@ const ctx = canvas.getContext("2d");
 // RESPONSIVE
 // ================================
 function resizeCanvas() {
-    const padding = 40; // 20px * 2 (gauche+droite ou haut+bas)
+    const padding = CONTAINER_PADDING;
 
     const availableWidth = window.innerWidth - padding;
     const availableHeight = window.innerHeight - padding;
@@ -47,7 +47,17 @@ const player = {
     x: 100,
     y: 300,
     size: 40,
-    color: "#8e44ad"
+    color: "#8e44ad",
+
+    maxHp: 100,
+    hp: 100,
+
+    hudHpBar: {
+        x: 60,      // marge gauche
+        y: 40,      // marge haute
+        width: 300, // largeur de la barre
+        height: 20  // hauteur de la barre
+    }
 };
 
 // ================================
@@ -67,7 +77,29 @@ function drawBackground() {
 
 function drawPlayer() {
     ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.size, player.size);
+    ctx.fillRect(
+        player.x,
+        player.y,
+        player.size,
+        player.size
+    );
+}
+
+function drawPlayerHealthHUD(player) {
+    const { x, y, width, height } = player.hudHpBar;
+    const hpRatio = player.hp / player.maxHp;
+
+    // Bordure
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x - 2, y - 2, width + 4, height + 4);
+
+    // Fond vide
+    ctx.fillStyle = "#400";
+    ctx.fillRect(x, y, width, height);
+
+    // Vie actuelle
+    ctx.fillStyle = "#2ecc71";
+    ctx.fillRect(x, y, width * hpRatio, height);
 }
 
 // ================================
@@ -78,6 +110,7 @@ function gameLoop() {
 
     drawBackground();
     drawPlayer();
+    drawPlayerHealthHUD(player);
 
     requestAnimationFrame(gameLoop);
 }

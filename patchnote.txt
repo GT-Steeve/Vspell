@@ -1,3 +1,4 @@
 prototype 
 
 V0.00.01 = fondation html css js 
+v0.01.00 = Barre de vie Player
