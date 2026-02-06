@@ -7,3 +7,4 @@ v0.01.02 = ajustement bordure Barre de vie
 v0.02.00 = ajout ennemi duel
 v0.02.01 = ajout échange de dégat + stat attack / attackSpeed
 v0.02.02 = texte flottant des dégat reçue
+v0.02.03 = dégat sur l'adversaire lorsqu'on appuie sur Z où T

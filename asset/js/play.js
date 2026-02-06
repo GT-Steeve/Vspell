@@ -42,7 +42,7 @@ const hudHpFrame = new Image();
 hudHpFrame.src = "asset/img/ui/titre_Vspel.png";
 
 hudHpFrame.onerror = () => {
-    console.warn("Image HUD HP introuvable → fallback activé");
+    console.warn("HUD HP image introuvable → fallback activé");
 };
 
 // ================================
@@ -53,14 +53,8 @@ const player = {
     y: 300,
     size: 40,
     color: "#8e44ad",
-
     maxHp: 1000,
     hp: 1000,
-
-    attack: 25,
-    attackSpeed: 0.75,
-    lastAttack: 0,
-
     hudHpBar: {
         x: 60,
         y: 30,
@@ -80,14 +74,8 @@ const enemy = {
     y: 300,
     size: 40,
     color: "#f1c40f",
-
     maxHp: 1000,
     hp: 1000,
-
-    attack: 15,
-    attackSpeed: 1.1,
-    lastAttack: 0,
-
     hudHpBar: {
         x: GAME_WIDTH - 60 - 300,
         y: 30,
@@ -100,17 +88,37 @@ const enemy = {
 };
 
 // ================================
+// ATTAQUES
+// ================================
+const attacks = {
+    z: { damage: 25, color: "#ff0000" },
+    t: { damage: 10, color: "#00ffff" }
+};
+
+let pendingAttack = null;
+
+// ================================
+// INPUT CLAVIER
+// ================================
+window.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+    if (attacks[key] && !pendingAttack && enemy.hp > 0) {
+        pendingAttack = attacks[key];
+    }
+});
+
+// ================================
 // DÉGÂTS FLOTTANTS
 // ================================
 const damageTexts = [];
 
-function addDamageText(value, hudX, hudY, color = "#ff0000") {
+function addDamageText(value, x, y, color) {
     damageTexts.push({
         value,
-        x: hudX,
-        y: hudY + 25, // 25px sous la barre de vie
+        x,
+        y: y + 25,
+        lifetime: 0.8,
         alpha: 1,
-        lifetime: 0.8, // durée affichage en secondes
         color
     });
 }
@@ -119,12 +127,13 @@ function drawDamageTexts(deltaTime) {
     for (let i = damageTexts.length - 1; i >= 0; i--) {
         const dmg = damageTexts[i];
         dmg.lifetime -= deltaTime;
+
         if (dmg.lifetime <= 0) {
             damageTexts.splice(i, 1);
             continue;
         }
 
-        dmg.y += 40 * deltaTime; // vitesse de descente
+        dmg.y += 40 * deltaTime;
         dmg.alpha = dmg.lifetime / 0.8;
 
         ctx.globalAlpha = dmg.alpha;
@@ -151,67 +160,59 @@ function drawEntity(entity) {
 
 function drawHealthHUD(entity, invert = false) {
     const { x, y, width, height, frameWidth, frameHeight, fallbackPadding } = entity.hudHpBar;
-    const hpRatio = Math.max(0, entity.hp / entity.maxHp);
-    const hasHudImage = hudHpFrame.complete && hudHpFrame.naturalWidth !== 0;
+    const ratio = Math.max(0, entity.hp / entity.maxHp);
+    const hasFrame = hudHpFrame.complete && hudHpFrame.naturalWidth !== 0;
 
-    // image HUD
-    if (hasHudImage) {
+    // Frame / bordure
+    if (hasFrame) {
         ctx.drawImage(hudHpFrame, x - 20, y - 15, frameWidth, frameHeight);
     } else {
         ctx.fillStyle = "#000";
-        ctx.fillRect(x - fallbackPadding, y - fallbackPadding, width + fallbackPadding * 2, height + fallbackPadding * 2);
+        ctx.fillRect(
+            x - fallbackPadding,
+            y - fallbackPadding,
+            width + fallbackPadding * 2,
+            height + fallbackPadding * 2
+        );
     }
 
-    // barre vide
+    // Fond barre
     ctx.fillStyle = "#400";
     ctx.fillRect(x, y, width, height);
 
-    // barre actuelle
+    // Vie actuelle
     ctx.fillStyle = "#2ecc71";
     if (!invert) {
-        ctx.fillRect(x, y, width * hpRatio, height);
+        ctx.fillRect(x, y, width * ratio, height);
     } else {
-        ctx.fillRect(x + width * (1 - hpRatio), y, width * hpRatio, height);
+        ctx.fillRect(x + width * (1 - ratio), y, width * ratio, height);
     }
 }
 
 // ================================
 // COMBAT
 // ================================
-function handleCombat(deltaTime) {
-    // --- Player attaque Ennemi ---
-    player.lastAttack += deltaTime;
-    if (player.lastAttack >= player.attackSpeed) {
-        enemy.hp -= player.attack;
-        enemy.hp = Math.max(0, enemy.hp);
-        player.lastAttack = 0;
+function handleCombat() {
+    if (!pendingAttack || enemy.hp <= 0) return;
 
-        const hud = enemy.hudHpBar;
-        const hpRatio = enemy.hp / enemy.maxHp;
-        // X = début du vert restant inversé (barre ennemie va de droite à gauche)
-        const x = hud.x + hud.width * (1 - hpRatio);
-        addDamageText(player.attack, x, hud.y, "#ff0000");
-    }
+    const { damage, color } = pendingAttack;
 
-    // --- Ennemi attaque Player ---
-    enemy.lastAttack += deltaTime;
-    if (enemy.lastAttack >= enemy.attackSpeed) {
-        player.hp -= enemy.attack;
-        player.hp = Math.max(0, player.hp);
-        enemy.lastAttack = 0;
+    enemy.hp = Math.max(0, enemy.hp - damage);
 
-        const hud = player.hudHpBar;
-        const hpRatio = player.hp / player.maxHp;
-        // X = fin du vert restant
-        const x = hud.x + hud.width * hpRatio;
-        addDamageText(enemy.attack, x, hud.y, "#ffcc00");
-    }
+    const hud = enemy.hudHpBar;
+    const ratio = enemy.hp / enemy.maxHp;
+    const textX = hud.x + hud.width * (1 - ratio);
+
+    addDamageText(damage, textX, hud.y, color);
+
+    pendingAttack = null;
 }
 
 // ================================
 // GAME LOOP
 // ================================
 let lastTime = 0;
+
 function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
@@ -220,16 +221,13 @@ function gameLoop(timestamp) {
 
     drawBackground();
 
-    // Player
     drawEntity(player);
     drawHealthHUD(player);
 
-    // Ennemi
     drawEntity(enemy);
     drawHealthHUD(enemy, true);
 
-    handleCombat(deltaTime);
-
+    handleCombat();
     drawDamageTexts(deltaTime);
 
     requestAnimationFrame(gameLoop);
