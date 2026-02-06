@@ -65,7 +65,9 @@ const player = {
         height: 20,
 
         frameWidth: 300,
-        frameHeight: 50
+        frameHeight: 50,
+        
+        fallbackPadding: 2 
     }
 };
 
@@ -122,9 +124,10 @@ function drawPlayerHealthHUD(player) {
             frameHeight
         );
     } else {
-        // Fallback simple (cadre)
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x - 4, y - 4, width + 8, height + 8);
+        // fallback simple avec padding configurable
+        const pad = player.hudHpBar.fallbackPadding;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(x - pad, y - pad, width + pad * 2, height + pad * 2);
     }
 
     // ============================
