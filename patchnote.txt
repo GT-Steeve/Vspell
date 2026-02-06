@@ -5,3 +5,4 @@ v0.01.00 = Barre de vie Player
 v0.01.01 = ajout HUD Barre de vie Player
 v0.01.02 = ajustement bordure Barre de vie
 v0.02.00 = ajout ennemi duel
+v0.02.01 = ajout échange de dégat + stat attack / attackSpeed
