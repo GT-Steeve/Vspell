@@ -1,0 +1,47 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    background: url("../img/background_fight/underArene.jpg") no-repeat top left;
+    background-size: 100% 100%;
+    overflow: hidden;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+}
+
+.title-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* centrage vertical */
+    align-items: center;     /* centrage horizontal */
+    gap: 40px;               /* espace entre titre et action */
+}
+
+
+/* Image titre */
+.game-title {
+    max-width: 70%;
+}
+
+/* Image "cliquer pour commencer" */
+.click-start {
+    max-width: 40%;
+    opacity: 0;
+    transition: opacity 0.75s ease-in-out;
+    cursor: pointer;
+}
+
+.footer {
+    position: absolute;
+    bottom: 15px;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+    pointer-events: none; /* évite les clics involontaires */
+}

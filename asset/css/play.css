@@ -1,0 +1,27 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    background-color: #222;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Conteneur du jeu */
+#gameContainer {
+    padding: 20px; /* ✅ haut, bas, gauche, droite */
+    box-sizing: border-box;
+}
+
+/* Canvas */
+canvas {
+    display: block;
+    border: 4px solid #ffffff;
+    background-color: black;
+}
