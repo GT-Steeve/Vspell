@@ -3,7 +3,7 @@
 // ================================
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 450;
-const CONTAINER_PADDING = 40; // 20px haut + 20px bas
+const CONTAINER_PADDING = 40;
 
 // ================================
 // CANVAS
@@ -15,10 +15,8 @@ const ctx = canvas.getContext("2d");
 // RESPONSIVE
 // ================================
 function resizeCanvas() {
-    const padding = CONTAINER_PADDING;
-
-    const availableWidth = window.innerWidth - padding;
-    const availableHeight = window.innerHeight - padding;
+    const availableWidth = window.innerWidth - CONTAINER_PADDING;
+    const availableHeight = window.innerHeight - CONTAINER_PADDING;
 
     const scale = Math.min(
         availableWidth / GAME_WIDTH,
@@ -40,6 +38,14 @@ resizeCanvas();
 const backgroundImage = new Image();
 backgroundImage.src = "asset/img/background_fight/arene.jpg";
 
+const hudHpFrame = new Image();
+hudHpFrame.src = "asset/img/ui/titre_Vspel.png";
+
+// optionnel : info console si image absente
+hudHpFrame.onerror = () => {
+    console.warn("Image HUD HP introuvable → fallback activé");
+};
+
 // ================================
 // PLAYER
 // ================================
@@ -53,10 +59,13 @@ const player = {
     hp: 100,
 
     hudHpBar: {
-        x: 60,      // marge gauche
-        y: 40,      // marge haute
-        width: 300, // largeur de la barre
-        height: 20  // hauteur de la barre
+        x: 60,
+        y: 30,
+        width: 300,
+        height: 20,
+
+        frameWidth: 300,
+        frameHeight: 50
     }
 };
 
@@ -86,18 +95,44 @@ function drawPlayer() {
 }
 
 function drawPlayerHealthHUD(player) {
-    const { x, y, width, height } = player.hudHpBar;
-    const hpRatio = player.hp / player.maxHp;
+    const {
+        x,
+        y,
+        width,
+        height,
+        frameWidth,
+        frameHeight
+    } = player.hudHpBar;
 
-    // Bordure
-    ctx.fillStyle = "#000";
-    ctx.fillRect(x - 2, y - 2, width + 4, height + 4);
+    const hpRatio = Math.max(0, player.hp / player.maxHp);
 
-    // Fond vide
+    const hasHudImage =
+        hudHpFrame.complete &&
+        hudHpFrame.naturalWidth !== 0;
+
+    // ============================
+    // IMAGE HUD (si dispo)
+    // ============================
+    if (hasHudImage) {
+        ctx.drawImage(
+            hudHpFrame,
+            x - 20,
+            y - 15,
+            frameWidth,
+            frameHeight
+        );
+    } else {
+        // Fallback simple (cadre)
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x - 4, y - 4, width + 8, height + 8);
+    }
+
+    // ============================
+    // BARRE DE VIE (TOUJOURS)
+    // ============================
     ctx.fillStyle = "#400";
     ctx.fillRect(x, y, width, height);
 
-    // Vie actuelle
     ctx.fillStyle = "#2ecc71";
     ctx.fillRect(x, y, width * hpRatio, height);
 }
