@@ -41,10 +41,6 @@ backgroundImage.src = "asset/img/background_fight/arene.jpg";
 const hudHpFrame = new Image();
 hudHpFrame.src = "asset/img/ui/titre_Vspel.png";
 
-hudHpFrame.onerror = () => {
-    console.warn("HUD HP image introuvable → fallback activé");
-};
-
 // ================================
 // PLAYER
 // ================================
@@ -67,7 +63,7 @@ const player = {
 };
 
 // ================================
-// ENNEMI
+// ENEMY
 // ================================
 const enemy = {
     x: GAME_WIDTH - 140,
@@ -91,8 +87,10 @@ const enemy = {
 // ATTAQUES
 // ================================
 const attacks = {
-    z: { damage: 25, color: "#ff0000" },
-    t: { damage: 10, color: "#00ffff" }
+    z: { damage: 50, color: "#ff0000", target: "enemy" },
+    t: { damage: 30, color: "#00ffff", target: "enemy" },
+    x: { damage: 50, color: "#ff8800", target: "player" },
+    v: { damage: 30, color: "#ff00ff", target: "player" }
 };
 
 let pendingAttack = null;
@@ -102,7 +100,7 @@ let pendingAttack = null;
 // ================================
 window.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
-    if (attacks[key] && !pendingAttack && enemy.hp > 0) {
+    if (attacks[key] && !pendingAttack) {
         pendingAttack = attacks[key];
     }
 });
@@ -146,7 +144,7 @@ function drawDamageTexts(deltaTime) {
 }
 
 // ================================
-// DRAW FUNCTIONS
+// DRAW
 // ================================
 function drawBackground() {
     if (!backgroundImage.complete) return;
@@ -163,7 +161,6 @@ function drawHealthHUD(entity, invert = false) {
     const ratio = Math.max(0, entity.hp / entity.maxHp);
     const hasFrame = hudHpFrame.complete && hudHpFrame.naturalWidth !== 0;
 
-    // Frame / bordure
     if (hasFrame) {
         ctx.drawImage(hudHpFrame, x - 20, y - 15, frameWidth, frameHeight);
     } else {
@@ -176,11 +173,9 @@ function drawHealthHUD(entity, invert = false) {
         );
     }
 
-    // Fond barre
     ctx.fillStyle = "#400";
     ctx.fillRect(x, y, width, height);
 
-    // Vie actuelle
     ctx.fillStyle = "#2ecc71";
     if (!invert) {
         ctx.fillRect(x, y, width * ratio, height);
@@ -193,15 +188,25 @@ function drawHealthHUD(entity, invert = false) {
 // COMBAT
 // ================================
 function handleCombat() {
-    if (!pendingAttack || enemy.hp <= 0) return;
+    if (!pendingAttack) return;
 
-    const { damage, color } = pendingAttack;
+    const { damage, color, target } = pendingAttack;
+    const entity = target === "enemy" ? enemy : player;
 
-    enemy.hp = Math.max(0, enemy.hp - damage);
+    if (entity.hp <= 0) {
+        pendingAttack = null;
+        return;
+    }
 
-    const hud = enemy.hudHpBar;
-    const ratio = enemy.hp / enemy.maxHp;
-    const textX = hud.x + hud.width * (1 - ratio);
+    entity.hp = Math.max(0, entity.hp - damage);
+
+    const hud = entity.hudHpBar;
+    const ratio = entity.hp / entity.maxHp;
+
+    // Position du texte comme AVANT
+    const textX = target === "enemy"
+        ? hud.x + hud.width * (1 - ratio)
+        : hud.x + hud.width * ratio;
 
     addDamageText(damage, textX, hud.y, color);
 

@@ -8,3 +8,7 @@ v0.02.00 = ajout ennemi duel
 v0.02.01 = ajout échange de dégat + stat attack / attackSpeed
 v0.02.02 = texte flottant des dégat reçue
 v0.02.03 = dégat sur l'adversaire lorsqu'on appuie sur Z où T
+v0.02.04 = dégat sur le joueur  lorsqu'on appuie sur X où V
+
+-- next step
+AJouter des dégat via les sprites
