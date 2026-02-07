@@ -12,3 +12,9 @@ v0.02.04 = dégat sur le joueur  lorsqu'on appuie sur X où V
 
 -- next step
 AJouter des dégat via les sprites
+
+-- link 
+https://github.com/GT-Steeve/Vspell
+
+-- see page 
+https://gt-steeve.github.io/Vspell/
